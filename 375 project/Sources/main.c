@@ -49,8 +49,8 @@ int i;
 double t;
 double wheelDistance;
 
-unsigned int motorL = 4500;
-unsigned int motorR = 4500;
+unsigned int motorL = 4900;
+unsigned int motorR = 4900;
 
 void goStraight(int degrees, char direction);	//forward-declared method
 void GoStraight(int);	//forward-declared method
@@ -61,10 +61,133 @@ void Stop (int);	//forward-declared method
 void END (int);	//forward-declared method
 
 
+static  long leftAccumulator = 0;    // total counts from Right Encoder
+static  long rightAccumulator = 0;   // total counts from Left Encoder
+
+#define ACCUM_MAX_THRESHOLD 180     // value used to know when to move value into s/w counter
+
+void  ResetEncoder() 
+{
+
+  DDRT =  0xF3;   //init PT2 & PT3 as input
+  ICPAR = 0xFC;   //enable PT2 & PT3 as pulse accum
+  TCTL4 = 0x50;   //set to capture rising edge
+
+  leftAccumulator = 0;  
+  rightAccumulator = 0;
+
+  PACN3 = 0; // reset hw accumulators
+  PACN2 = 0; 
+}
+
+void  UpdateEncoderTotals() 
+{
+  // increment S/W accumulators before overflow occurs
+  
+  if( PACN3 >= ACCUM_MAX_THRESHOLD ) 
+  {
+    leftAccumulator =  leftAccumulator + PACN3;
+    PACN3 = 0;
+  }
+  if( PACN2 >= ACCUM_MAX_THRESHOLD ) 
+  {
+    rightAccumulator =  rightAccumulator + PACN2;
+    PACN2 = 0;
+  }
+}
+
+long GetLeftEncoderTotal()
+{
+  return( leftAccumulator + PACN3 ); 
+}
+
+long GetRightEncoderTotal()
+{
+  return( rightAccumulator + PACN2 ); 
+}
 
 
+static  long  motorSpeed;    // current motor speeds
+static  long  lAdjustment;
+static  long  rAdjustment;
 
-void goStraight(int degrees, char direction){			//example of calling the function : goStraight(180, 'F');	//'B' is backwards
+#define STOPPED_SPEED (4500)
+#define MAX_FORWARD_SPEED (5700)
+#define MAX_REVERSE_SPEED (3300)
+
+void  InitialSpeed( long speed ) 
+{
+  motorSpeed = speed;  
+  set_servo54(motorSpeed);
+  set_servo76(motorSpeed);
+}
+
+void  AdjustSpeeds( long lSpeed, long rSpeed ) 
+{
+  set_servo54(lSpeed);
+  set_servo76(rSpeed);
+}
+
+void  StopMoving( ) 
+{
+  set_servo54(STOPPED_SPEED);
+  set_servo76(STOPPED_SPEED);
+}
+
+void  SpeedAdjust( )
+{
+  long  deltaCount;
+  
+  UpdateEncoderTotals();
+  deltaCount = GetLeftEncoderTotal() - GetRightEncoderTotal();
+
+  if( motorSpeed > STOPPED_SPEED ) 
+  {
+    
+    lAdjustment = motorSpeed + (4 * deltaCount);
+    rAdjustment = motorSpeed - (4 * deltaCount);
+    
+    if( lAdjustment > MAX_FORWARD_SPEED )
+      lAdjustment = MAX_FORWARD_SPEED;
+    if( rAdjustment > MAX_FORWARD_SPEED )
+      rAdjustment = MAX_FORWARD_SPEED;
+    if( lAdjustment < STOPPED_SPEED )
+      lAdjustment = STOPPED_SPEED;
+    if( rAdjustment < STOPPED_SPEED )
+      rAdjustment = STOPPED_SPEED;
+  } 
+  else 
+  {
+    lAdjustment = motorSpeed - (4 * deltaCount);
+    rAdjustment = motorSpeed + (4 * deltaCount);
+    
+    if( lAdjustment < MAX_REVERSE_SPEED )
+      lAdjustment = MAX_REVERSE_SPEED;
+    if( rAdjustment < MAX_REVERSE_SPEED )
+      rAdjustment = MAX_REVERSE_SPEED;
+    if( lAdjustment > STOPPED_SPEED )
+      lAdjustment = STOPPED_SPEED;
+    if( rAdjustment > STOPPED_SPEED )
+      rAdjustment = STOPPED_SPEED;
+  }
+  
+  // adjust speeds if one is faster than the other (simple control loop)
+  AdjustSpeeds( lAdjustment, rAdjustment ); 
+}
+
+#define CM_TRAVEL_PER_REVOLUTION  (33)
+#define PULSES_PER_REVOLUTION     (90)
+
+
+void goStraight(int degrees, char direction)
+{
+  set_servo54(5000);
+  set_servo76(5000);
+
+  return;
+  
+
+			//example of calling the function : goStraight(180, 'F');	//'B' is backwards
 /* 	wheelDistance = (((((degrees*PI/180)*r)/(2*PI))*(180/PI))/180);	//distance the wheel should turn
 	
 	if(direction == 'F'){//go forwards
@@ -103,16 +226,25 @@ void goStraight(int degrees, char direction){			//example of calling the functio
 
 
 void main() {
-	
+  int i;	
     //
     servo54_init();
     servo76_init();
     lcd_init(); // start the LCD
   
-
+    ResetEncoder();
+//    InitialSpeed(5200);
+    InitialSpeed(3800);
 
   while(1){
-   
+
+    SpeedAdjust();
+    
+    set_lcd_addr(0x00);
+  	write_long_lcd(GetLeftEncoderTotal());
+  	
+  	set_lcd_addr(0x40);
+  	write_long_lcd(GetRightEncoderTotal());
   
     
     //PingSensor(1);
@@ -135,7 +267,7 @@ void main() {
 	set_servo54(newSpeedL);
     set_servo76(newSpeedR); */
 	
-    GoStraight(100);    //encoder counts may be affected by the turn counts, need to address
+//    GoStraight(100);    //encoder counts may be affected by the turn counts, need to address
 	
 	
 	//goStraight(180, 'F');
