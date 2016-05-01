@@ -406,7 +406,7 @@ void main() {
 	int i;
 	
   //START PROGRAM WITH A 5 SECOND DELAY
-  ms_delay(20000);
+  //ms_delay(20000);
 
   
   
