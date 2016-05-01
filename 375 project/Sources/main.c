@@ -349,6 +349,52 @@ void ParkCheck(){
 
 
 
+void RunMotorWithLightSensors() {
+	lcd_init();
+	ad0_enable();
+
+
+	while(1){
+		int ValueLeft;
+		int ColorLeft =0;
+		int ValueRight;
+		int ColorRight =0;
+
+		ValueLeft = ad0conv(6);    // PAD06          //Robots left
+		ValueRight = ad0conv(2);   // PAD02          //Robots right
+		if(ValueLeft>200){
+			ColorLeft = 1;           //black if greater than 200
+		}
+		if(ValueRight>200){
+			ColorRight = 1;          //black if greater than 200
+		}
+		
+		if(ColorLeft == 1 && ColorRight == 1){
+			//stop
+			StopMoving();
+		} else if(ColorLeft == 1 && ColorRight == 0){
+			//go right
+			AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
+		} else if(ColorLeft == 0 && ColorRight == 1){
+			//go left
+			AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
+		} else{//assumed 0 : 0
+			//go straight
+			goStraight(30);
+		}
+	}
+} 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -360,7 +406,7 @@ void main() {
 	int i;
 	
   //START PROGRAM WITH A 5 SECOND DELAY
-  //ms_delay(5000);
+  ms_delay(20000);
 
   
   
@@ -390,15 +436,14 @@ void main() {
 		set_lcd_addr(0x40);
 		write_long_lcd(GetRightEncoderTotal());
   }
-	
+	ResetEncoder();
+	selectedEncoderCount = 0;
 	
 	
 	
 	
 	
 	//GO BACK
-	ResetEncoder();
-	selectedEncoderCount = 0;
 	InitialSpeed(3800);
 	
 	while(1){
@@ -520,12 +565,13 @@ void main() {
 	
 	
 	
+	//run the robot within the lines until both sensors go on the black line
+	RunMotorWithLightSensors();
 	
 	
 	
 	
-	
-	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
+/* 	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
 	while(1){
 		PingCheck();
 		set_lcd_addr(0x00);
@@ -534,15 +580,33 @@ void main() {
 			break;
 		}
 	}
-	ResetEncoder();
-	
-	
-	
-	ResetUltraSoundSensor('F');
+	ResetEncoder(); */
 	
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+/* 	ResetUltraSoundSensor('F');
 	
 	
 	
@@ -560,7 +624,15 @@ void main() {
 	
 	
 	
-	ResetUltraSoundSensor('U');
+	ResetUltraSoundSensor('U'); */
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
