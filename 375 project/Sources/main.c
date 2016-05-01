@@ -11,8 +11,7 @@
 #define HiCnt 3       // high pulse duration in TCNT counts
 #define LoCnt 500      // low signal between pulses time in TCNT Counts
 #define CompareCheck 180 
-#define PI 3.14159265358979323846	//the constant PI
-#define r 0.052375		//in meters the radius of the wheel
+
 #define fullSpeedForwardTime 0.0002375		//in seconds the time for 5700 clk pulses
 #define fullSpeedBackwardTime 0.0001375		//in seconds the time for 3300 clk pulses
 int diff = 0; 
@@ -175,50 +174,79 @@ void  SpeedAdjust( )
   AdjustSpeeds( lAdjustment, rAdjustment ); 
 }
 
+
+
+
+
 #define CM_TRAVEL_PER_REVOLUTION  (33)
 #define PULSES_PER_REVOLUTION     (90)
+#define PI 3.14159265358979323846	//the constant PI
+#define r 5.2375		//in centi-meters the radius of the wheel
+#define ONE_ENCODER_TICK_DISTANCE 0.36564648 //in centi-meters
+long selectedEncoderCount;
 
+void goStraight(int dis){//centi-meters
+	
+	
+	long  deltaCount;
 
-void goStraight(int degrees, char direction)
-{
-  set_servo54(5000);
-  set_servo76(5000);
+	UpdateEncoderTotals();
+	deltaCount = GetLeftEncoderTotal() - GetRightEncoderTotal();
+	selectedEncoderCount = ((dis/ONE_ENCODER_TICK_DISTANCE));
+	
+	if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+		StopMoving();
+	} else{
+		if( motorSpeed > STOPPED_SPEED ) 
+		{
 
+			lAdjustment = motorSpeed + (4 * deltaCount);
+			rAdjustment = motorSpeed - (4 * deltaCount);
+
+		if( lAdjustment > MAX_FORWARD_SPEED )
+		  lAdjustment = MAX_FORWARD_SPEED;
+		if( rAdjustment > MAX_FORWARD_SPEED )
+		  rAdjustment = MAX_FORWARD_SPEED;
+		if( lAdjustment < STOPPED_SPEED )
+		  lAdjustment = STOPPED_SPEED;
+		if( rAdjustment < STOPPED_SPEED )
+		  rAdjustment = STOPPED_SPEED;
+		} 
+		else 
+		{
+			lAdjustment = motorSpeed - (4 * deltaCount);
+			rAdjustment = motorSpeed + (4 * deltaCount);
+
+		if( lAdjustment < MAX_REVERSE_SPEED )
+		  lAdjustment = MAX_REVERSE_SPEED;
+		if( rAdjustment < MAX_REVERSE_SPEED )
+		  rAdjustment = MAX_REVERSE_SPEED;
+		if( lAdjustment > STOPPED_SPEED )
+		  lAdjustment = STOPPED_SPEED;
+		if( rAdjustment > STOPPED_SPEED )
+		  rAdjustment = STOPPED_SPEED;
+		}
+
+		// adjust speeds if one is faster than the other (simple control loop)
+		AdjustSpeeds( lAdjustment, rAdjustment ); 
+	}
   return;
-  
+}
 
-			//example of calling the function : goStraight(180, 'F');	//'B' is backwards
-/* 	wheelDistance = (((((degrees*PI/180)*r)/(2*PI))*(180/PI))/180);	//distance the wheel should turn
-	
-	if(direction == 'F'){//go forwards
-		t = fullSpeedForwardTime;
-		newSpeedL = 5700;
-		newSpeedR = 5700;
-	} else{//go backwards
-		t = fullSpeedBackwardTime;
-		newSpeedL = 3300;
-		newSpeedR = 3300;
+void turn(int dis){
+	selectedEncoderCount = ((dis/ONE_ENCODER_TICK_DISTANCE));
+	if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+		StopMoving();
 	}
-	
-	iterationCount = ((int) wheelDistance/t);	//this number represents the amount of iterations must occur for the wheel to turn the amount of degrees exactly specified
-	 */
-	 newSpeedL = 5700;
-		newSpeedR = 5700;
-	for(i = 0; i < 100000; i++){
-		set_servo54(newSpeedL);
-		set_servo76(newSpeedR);
-		
-	}
-	
-	
-	
-	
 }
 
 
 
-
-
+void msDelay(unsigned int itime){
+unsigned int i; unsigned int j;
+   for(i=0;i<itime;i++)
+      for(j=0;j<4000;j++);
+}
 
 
 
@@ -226,75 +254,203 @@ void goStraight(int degrees, char direction)
 
 
 void main() {
-  int i;	
-    //
-    servo54_init();
-    servo76_init();
-    lcd_init(); // start the LCD
+	int i;
+	
+  //START PROGRAM WITH A 5 SECOND DELAY
+  ms_delay(5000);
+
   
-    ResetEncoder();
-//    InitialSpeed(5200);
-    InitialSpeed(3800);
+  
+  servo54_init();
+  servo76_init();
+  lcd_init(); // start the LCD
+
+  ResetEncoder();
+  
+  
+  
+  
+  
+  
+  
+  //GO STRAIGHT
+  InitialSpeed(5200);
 
   while(1){
+		goStraight(10);
+		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
 
-    SpeedAdjust();
-    
-    set_lcd_addr(0x00);
-  	write_long_lcd(GetLeftEncoderTotal());
-  	
-  	set_lcd_addr(0x40);
-  	write_long_lcd(GetRightEncoderTotal());
-  
-    
-    //PingSensor(1);
-    
-   // set_lcd_addr(0x00);
-   // write_int_lcd((int)dist);
-    
-    
-    
-      
-    //  if(dist <28){
-       
-      
-         
-    //Stop(1000);
-    //TurnLeft(1200); 
-/* 	newSpeedL = 5500;
-	newSpeedR = 5500;
-	
-	set_servo54(newSpeedL);
-    set_servo76(newSpeedR); */
-	
-//    GoStraight(100);    //encoder counts may be affected by the turn counts, need to address
-	
-	
-	//goStraight(180, 'F');
-	
-	//END(1);            //terminate program
-	
-	
-	
-   // Stop(1000);
-    //TurnRight(1000);
-   // GoStraight(100);    //encoder counts may be affected by the turn counts, need to address
-     
-                      
-     
-   //    } else{
-       
-   //     GoStraight(10);
-  //     }
-       
-       
-       
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
   }
-
-
+	
+	
+	
+	
+	
+	
+	//GO BACK
+	ResetEncoder();
+	selectedEncoderCount = 0;
+	InitialSpeed(3800);
+	
+	while(1){
+		goStraight(10);
+		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
+		
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
+    }
+	ResetEncoder();
+	selectedEncoderCount = 0;
+	
+	
+	
+	
+	
+	
+	//GO RIGHT
+	AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
+	
+	while(1){
+		turn(10);	//turn by distance
+		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
+		
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
+    }
+	ResetEncoder();
+	selectedEncoderCount = 0;
+	
+	
+	
+	
+	
+	
+	//GO LEFT
+	AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
+	
+	while(1){
+		turn(10);	//turn by distance
+		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
+		
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
+    }
+	ResetEncoder();
+	selectedEncoderCount = 0;
+	
+	
+	
+	
+	
+	
+	
+	//FAST TURN RIGHT
+	AdjustSpeeds(5200, 3800);	//LEFT - RIGHT
+	
+	while(1){
+		turn(10);	//turn by distance
+		if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
+		
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
+    }
+	ResetEncoder();
+	selectedEncoderCount = 0;
+	
+	
+	
+	
+	
+	
+	
+	//FAST TURN LEFT
+	AdjustSpeeds(3800, 5200);	//LEFT - RIGHT
+	
+	while(1){
+		turn(10);	//turn by distance
+		if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
+			break;
+		}
+		set_lcd_addr(0x00);
+		write_long_lcd(GetLeftEncoderTotal());
+		
+		set_lcd_addr(0x40);
+		write_long_lcd(GetRightEncoderTotal());
+    }
+	ResetEncoder();
+	selectedEncoderCount = 0;
   
-         asm("swi");      
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    asm("swi");      
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
