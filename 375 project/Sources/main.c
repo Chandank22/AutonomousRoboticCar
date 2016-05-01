@@ -28,10 +28,12 @@ void interrupt 9 handler1() {
  HILOtimes1();
 }
 
+void interrupt 8 handler0() {
+ HILOtimes0();
+}
   
 
 
-int HI_time1; // High time (pulse width)
 double time;
 double dist;
 double a = 0.0000015;
@@ -51,13 +53,16 @@ double wheelDistance;
 unsigned int motorL = 4900;
 unsigned int motorR = 4900;
 
-void goStraight(int degrees, char direction);	//forward-declared method
+void goStraight(int dis);	//forward-declared method
+void turn(int dis);		//forward-declared method
 void GoStraight(int);	//forward-declared method
 int PingSensor(int);	//forward-declared method
 void TurnLeft(int degrees, char direction);	//forward-declared method
 void TurnRight(int);	//forward-declared method
 void Stop (int);	//forward-declared method
 void END (int);	//forward-declared method
+//long PingSensor(void);	//forward-declared method
+//long PingSensor(void);	//forward-declared method
 
 
 static  long leftAccumulator = 0;    // total counts from Right Encoder
@@ -67,8 +72,7 @@ static  long rightAccumulator = 0;   // total counts from Left Encoder
 
 void  ResetEncoder() 
 {
-
-  DDRT =  0xF3;   //init PT2 & PT3 as input
+  DDRT &=  0xF3;   //init PT2 & PT3 as input
   ICPAR = 0xFC;   //enable PT2 & PT3 as pulse accum
   TCTL4 = 0x50;   //set to capture rising edge
 
@@ -240,13 +244,112 @@ void turn(int dis){
 	}
 }
 
+int HI_time0; // High time (pulse width)
+int HI_time1; // High time (pulse width)
+
+char  PingHiorLo;
+char  ParkHiorLo;
+#define PingHiCnt 3       // high pulse duration in TCNT counts
+#define PingLoCnt 500      // low signal between pulses time in TCNT Counts
+#define ParkHiCnt 3       // high pulse duration in TCNT counts
+#define ParkLoCnt 500      // low signal between pulses time in TCNT Counts  
+double Pingtime;
+double Pingdist;
+double Parktime;
+double Parkdist;
 
 
-void msDelay(unsigned int itime){
-unsigned int i; unsigned int j;
-   for(i=0;i<itime;i++)
-      for(j=0;j<4000;j++);
+void ResetUltraSoundSensor(char sensor){
+	TSCR1 = 0x80;	//timer system control register
+	TSCR2 = 0x0;	//timer system control register
+	TIOS = 0x0;		//what input compare channel you are using / register select
+	TCTL2 = 0x0;	//what will you do with the pin
+	TFLG1 = 0xFF;	//clear the flag
+	TIE = 0x0;		//no interrupts
+	
+	if(sensor == 'F'){
+		HI_time1 = 0;
+	}else{
+		HI_time0 = 0;
+	}
 }
+
+
+
+
+void PingCheck(){
+	while(1){
+		TSCR1 = 0x90;         // enable TCNT count & Fast Flag Clearing
+		TSCR2 = 0x04;         // choose TCNT rate at 24MHz/16 = 1.5MHz                 //this will effect the parameters above
+		TIOS |= 0x02;         // enable OC1 function
+		TCTL2 = 0x0C;         // choose OC1 action to pull high
+		TFLG1 = 0xFF;         // cleara all OC flags
+		TC1 = TCNT+10;        // wait 10 TCNT counts for pin pull high
+		while(TFLG1 & 0x02)   // wait for match to occur
+		TC1 = TC1 + 0;        // this will clear the OC1 Flag
+		TCTL2 = 0x04;         // set OC1 pin for toggle
+		TC1 += PingHiCnt;         // Make the high last as needed
+		PingHiorLo = 0;           // Clear the high-low flag to begin
+		TIE = 0x02;           // Authorize OC1 interrupts
+		asm("cli");
+			 
+		HILO1_init(); 
+
+
+		HI_time1 = get_HI_time1();
+		
+		Pingtime = ( (double) HI_time1) * a;
+
+		Pingdist = ( ( 331.5 + ( 0.6 * 21 ) ) * Pingtime ) * 17;
+		
+		
+		if(Pingdist !=0){
+		  return;
+		}
+	}
+    
+}
+
+
+
+
+void ParkCheck(){
+	while(1){
+		TSCR1 = 0x90;         // enable TCNT count & Fast Flag Clearing
+		TSCR2 = 0x04;         // choose TCNT rate at 24MHz/16 = 1.5MHz                 //this will effect the parameters above
+		TIOS |= 0x01;         // enable OC1 function
+		TCTL2 = 0x03;         // choose OC1 action to pull high
+		TFLG1 = 0xFF;         // clear all OC flags
+		TC0 = TCNT+10;        // wait 10 TCNT counts for pin pull high
+		while(TFLG1 & 0x01)   // wait for match to occur
+		TC0 = TC0 + 0;        // this will clear the OC1 Flag
+		TCTL2 = 0x01;         // set OC1 pin for toggle
+		TC0 += ParkHiCnt;         // Make the high last as needed
+		ParkHiorLo = 0;           // Clear the high-low flag to begin
+		TIE = 0x01;           // Authorize OC1 interrupts
+		asm("cli");
+			 
+		HILO0_init(); 
+
+
+		HI_time0 = get_HI_time0();
+		
+		Parktime = ( (double) HI_time0) * a;
+
+		Parkdist = ( ( 331.5 + ( 0.6 * 21 ) ) * Parktime ) * 17;
+		
+		
+		if(Parkdist !=0){
+		  return;
+		}
+	}
+    
+}
+
+
+
+
+
 
 
 
@@ -257,7 +360,7 @@ void main() {
 	int i;
 	
   //START PROGRAM WITH A 5 SECOND DELAY
-  ms_delay(5000);
+  //ms_delay(5000);
 
   
   
@@ -401,19 +504,75 @@ void main() {
     }
 	ResetEncoder();
 	selectedEncoderCount = 0;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    asm("swi");      
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
+	while(1){
+		PingCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)Pingdist);
+		if(Pingdist <= 20){
+			break;
+		}
+	}
+	ResetEncoder();
+	
+	
+	
+	ResetUltraSoundSensor('F');
+	
+	
+	
+	
+	
+	
+	
+	//LOOK FOR EMPTY PARKING SPOTS UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
+	while(1){
+		ParkCheck();
+		set_lcd_addr(0x0);
+		write_long_lcd((long)Parkdist);
+		if(Parkdist <= 20){
+			break;
+		}
+	}
+	ResetEncoder();
+	
+	
+	
+	
+	ResetUltraSoundSensor('U');
+	
+	
+	
+	
+	
+	
+	
+	
+	asm("swi");
+	
+	
+    
 }
 
 
