@@ -281,7 +281,7 @@ void PingCheck(){
 	while(1){
 		TSCR1 = 0x90;         // enable TCNT count & Fast Flag Clearing
 		TSCR2 = 0x04;         // choose TCNT rate at 24MHz/16 = 1.5MHz                 //this will effect the parameters above
-		TIOS |= 0x02;         // enable OC1 function
+		TIOS = 0x02;         // enable OC1 function
 		TCTL2 = 0x0C;         // choose OC1 action to pull high
 		TFLG1 = 0xFF;         // cleara all OC flags
 		TC1 = TCNT+10;        // wait 10 TCNT counts for pin pull high
@@ -317,7 +317,7 @@ void ParkCheck(){
 	while(1){
 		TSCR1 = 0x90;         // enable TCNT count & Fast Flag Clearing
 		TSCR2 = 0x04;         // choose TCNT rate at 24MHz/16 = 1.5MHz                 //this will effect the parameters above
-		TIOS |= 0x01;         // enable OC1 function
+		TIOS = 0x01;         // enable OC1 function
 		TCTL2 = 0x03;         // choose OC1 action to pull high
 		TFLG1 = 0xFF;         // clear all OC flags
 		TC0 = TCNT+10;        // wait 10 TCNT counts for pin pull high
@@ -347,40 +347,50 @@ void ParkCheck(){
 }
 
 
-
+int ValueLeft;
+int ValueRight;
+int ColorLeft;
+int ColorRight;
 
 void RunMotorWithLightSensors() {
-	lcd_init();
 	ad0_enable();
-
-
+	
 	while(1){
-		int ValueLeft;
-		int ColorLeft =0;
-		int ValueRight;
-		int ColorRight =0;
 
 		ValueLeft = ad0conv(6);    // PAD06          //Robots left
 		ValueRight = ad0conv(2);   // PAD02          //Robots right
-		if(ValueLeft>200){
+		
+		if(ValueLeft>400){
 			ColorLeft = 1;           //black if greater than 200
+		} else{
+			ColorLeft = 0;
 		}
-		if(ValueRight>200){
+		if(ValueRight>400){
 			ColorRight = 1;          //black if greater than 200
+		} else{
+			ColorRight = 0;
 		}
 		
 		if(ColorLeft == 1 && ColorRight == 1){
 			//stop
+			set_lcd_addr(0x00);
+			type_lcd("BB");
 			StopMoving();
 		} else if(ColorLeft == 1 && ColorRight == 0){
 			//go right
+			set_lcd_addr(0x00);
+			type_lcd("BW");
 			AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
 		} else if(ColorLeft == 0 && ColorRight == 1){
 			//go left
+			set_lcd_addr(0x00);
+			type_lcd("WB");
 			AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
 		} else{//assumed 0 : 0
 			//go straight
-			goStraight(30);
+			set_lcd_addr(0x00);
+			type_lcd("WW");
+			AdjustSpeeds(5200, 5200);	//LEFT - RIGHT
 		}
 	}
 } 
@@ -420,7 +430,7 @@ void main() {
   
   
   
-  
+  /*
   
   //GO STRAIGHT
   InitialSpeed(5200);
@@ -554,7 +564,7 @@ void main() {
 	
 	
 	
-	
+	*/
 	
 	
 	
@@ -568,10 +578,10 @@ void main() {
 	//run the robot within the lines until both sensors go on the black line
 	RunMotorWithLightSensors();
 	
+	/*
 	
 	
-	
-/* 	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
+ 	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
 	while(1){
 		PingCheck();
 		set_lcd_addr(0x00);
@@ -580,7 +590,11 @@ void main() {
 			break;
 		}
 	}
-	ResetEncoder(); */
+	ResetEncoder(); 
+	
+	
+	
+	*/
 	
 	
 	
@@ -602,13 +616,9 @@ void main() {
 	
 	
 	
+// 	ResetUltraSoundSensor('F');
 	
-	
-	
-	
-/* 	ResetUltraSoundSensor('F');
-	
-	
+	/*
 	
 	//LOOK FOR EMPTY PARKING SPOTS UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
 	while(1){
@@ -621,10 +631,10 @@ void main() {
 	}
 	ResetEncoder();
 	
+	*/
 	
 	
-	
-	ResetUltraSoundSensor('U'); */
+	//ResetUltraSoundSensor('U'); 
 	
 	
 	

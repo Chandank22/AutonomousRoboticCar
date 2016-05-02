@@ -71,6 +71,8 @@ void  SCI1_init(int);
 char  inchar1(void);
 void  outchar1(unsigned char);
 long  number(char*);
+
+
 void  ad0_enable(void);
 int   ad0conv(char);
 void  ad1_enable(void);
@@ -132,14 +134,25 @@ void  sound_init(void);
 void  sound_on(void);
 void  sound_off(void);
 void  tone(int);
+
+
+
+
 void  HILO1_init(void);
 void  HILOtimes1(void);
+
 int   get_HI_time1(void);
 int   get_LO_time1(void);
+
 void  HILO0_init(void);
 void  HILOtimes0(void);
+
 int   get_HI_time0(void);
 int   get_LO_time0(void);
+
+
+
+
 void  fill_weights(unsigned char*,unsigned char*,int,unsigned char);
 void fire_rules(unsigned char*,unsigned char*,unsigned char*,int);
 unsigned char calc_output(unsigned char*,unsigned char*,int);
