@@ -72,7 +72,7 @@ static  long rightAccumulator = 0;   // total counts from Left Encoder
 
 void  ResetEncoder() 
 {
-  DDRT &=  0xF3;   //init PT2 & PT3 as input
+  DDRT  &= 0xF3;   //init PT2 & PT3 as input
   ICPAR = 0xFC;   //enable PT2 & PT3 as pulse accum
   TCTL4 = 0x50;   //set to capture rising edge
 
@@ -81,6 +81,14 @@ void  ResetEncoder()
 
   PACN3 = 0; // reset hw accumulators
   PACN2 = 0; 
+}
+
+void ClearEncoders(){
+	leftAccumulator = 0;  
+	rightAccumulator = 0;
+
+	PACN3 = 0; // reset hw accumulators
+	PACN2 = 0; 
 }
 
 void  UpdateEncoderTotals() 
@@ -247,16 +255,16 @@ void turn(int dis){
 int HI_time0; // High time (pulse width)
 int HI_time1; // High time (pulse width)
 
-char  PingHiorLo;
-char  ParkHiorLo;
+char  pingHiorLo;
+char  parkHiorLo;
 #define PingHiCnt 3       // high pulse duration in TCNT counts
 #define PingLoCnt 500      // low signal between pulses time in TCNT Counts
 #define ParkHiCnt 3       // high pulse duration in TCNT counts
 #define ParkLoCnt 500      // low signal between pulses time in TCNT Counts  
-double Pingtime;
-double Pingdist;
-double Parktime;
-double Parkdist;
+double pingtime;
+double pingdist;
+double parktime;
+double parkdist;
 
 
 void ResetUltraSoundSensor(char sensor){
@@ -285,11 +293,11 @@ void PingCheck(){
 		TCTL2 = 0x0C;         // choose OC1 action to pull high
 		TFLG1 = 0xFF;         // cleara all OC flags
 		TC1 = TCNT+10;        // wait 10 TCNT counts for pin pull high
-		while(TFLG1 & 0x02)   // wait for match to occur
+		while(TFLG1 & 0x02);   // wait for match to occur
 		TC1 = TC1 + 0;        // this will clear the OC1 Flag
 		TCTL2 = 0x04;         // set OC1 pin for toggle
 		TC1 += PingHiCnt;         // Make the high last as needed
-		PingHiorLo = 0;           // Clear the high-low flag to begin
+		pingHiorLo = 0;           // Clear the high-low flag to begin
 		TIE = 0x02;           // Authorize OC1 interrupts
 		asm("cli");
 			 
@@ -298,12 +306,12 @@ void PingCheck(){
 
 		HI_time1 = get_HI_time1();
 		
-		Pingtime = ( (double) HI_time1) * a;
+		pingtime = ( (double) HI_time1) * a;
 
-		Pingdist = ( ( 331.5 + ( 0.6 * 21 ) ) * Pingtime ) * 17;
+		pingdist = ( ( 331.5 + ( 0.6 * 21 ) ) * pingtime ) * 17;
 		
 		
-		if(Pingdist !=0){
+		if(pingdist > 0){
 		  return;
 		}
 	}
@@ -321,11 +329,11 @@ void ParkCheck(){
 		TCTL2 = 0x03;         // choose OC1 action to pull high
 		TFLG1 = 0xFF;         // clear all OC flags
 		TC0 = TCNT+10;        // wait 10 TCNT counts for pin pull high
-		while(TFLG1 & 0x01)   // wait for match to occur
+		while(TFLG1 & 0x01);   // wait for match to occur
 		TC0 = TC0 + 0;        // this will clear the OC1 Flag
 		TCTL2 = 0x01;         // set OC1 pin for toggle
 		TC0 += ParkHiCnt;         // Make the high last as needed
-		ParkHiorLo = 0;           // Clear the high-low flag to begin
+		parkHiorLo = 0;           // Clear the high-low flag to begin
 		TIE = 0x01;           // Authorize OC1 interrupts
 		asm("cli");
 			 
@@ -334,12 +342,12 @@ void ParkCheck(){
 
 		HI_time0 = get_HI_time0();
 		
-		Parktime = ( (double) HI_time0) * a;
+		parktime = ( (double) HI_time0) * a;
 
-		Parkdist = ( ( 331.5 + ( 0.6 * 21 ) ) * Parktime ) * 17;
+		parkdist = ( ( 331.5 + ( 0.6 * 21 ) ) * parktime ) * 17;
 		
 		
-		if(Parkdist !=0){
+		if(parkdist > 0){
 		  return;
 		}
 	}
@@ -406,242 +414,102 @@ void RunMotorWithLightSensors() {
 
 
 
-
+void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
+	InitialSpeed(5200);
+	while(1){
+		SpeedAdjust();	//adjust the speed
+		PingCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)pingdist);
+		if(pingdist <= 15){
+			StopMoving();
+			break;
+		}
+	}
+	//clear the encoders
+	ClearEncoders();
+	//reset the counter
+	selectedEncoderCount = 0;
+	//backup 30 cm
+	InitialSpeed(3800);
+	/*goStraight(30);
+	
+	
+	if(startPos == 'L'){
+		//turn FAST right 90 degrees
+		AdjustSpeeds(5200, 3800);	//LEFT - RIGHT
+		
+		while(1){
+			turn(10);	//turn by distance
+			if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
+				break;
+			}
+			set_lcd_addr(0x00);
+			write_long_lcd(GetLeftEncoderTotal());
+			
+			set_lcd_addr(0x40);
+			write_long_lcd(GetRightEncoderTotal());
+		}
+		ResetEncoder();
+		selectedEncoderCount = 0;
+		
+		//drive to the line & check both line sensors to be on the black line
+		
+		
+		
+		
+	}else{//Right is assumed <---> 'R'
+		//turn FAST left 90 degrees
+		AdjustSpeeds(3800, 5200);	//LEFT - RIGHT
+		
+		while(1){
+			turn(10);	//turn by distance
+			if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
+				break;
+			}
+			set_lcd_addr(0x00);
+			write_long_lcd(GetLeftEncoderTotal());
+			
+			set_lcd_addr(0x40);
+			write_long_lcd(GetRightEncoderTotal());
+		}
+		ResetEncoder();
+		selectedEncoderCount = 0;
+		
+		//drive to the line & check both line sensors to be on the black line
+		
+		
+		
+		
+	}     */
+}
 
 
 
 
 
 void main() {
+	//initialize all variables
 	int i;
-	
-  //START PROGRAM WITH A 5 SECOND DELAY
-  //ms_delay(20000);
 
-  
-  
-  servo54_init();
-  servo76_init();
-  lcd_init(); // start the LCD
+	//START PROGRAM WITH A 5 SECOND DELAY
+	//ms_delay(5000);
 
-  ResetEncoder();
-  
-  
-  
-  
-  
-  /*
-  
-  //GO STRAIGHT
-  InitialSpeed(5200);
+	servo54_init();
+	servo76_init();
+	lcd_init();
 
-  while(1){
-		goStraight(10);
-		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-  }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	//GO BACK
-	InitialSpeed(3800);
-	
-	while(1){
-		goStraight(10);
-		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-		
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-    }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	
-	//GO RIGHT
-	AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
-	
-	while(1){
-		turn(10);	//turn by distance
-		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-		
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-    }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	
-	//GO LEFT
-	AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
-	
-	while(1){
-		turn(10);	//turn by distance
-		if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-		
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-    }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	
-	
-	//FAST TURN RIGHT
-	AdjustSpeeds(5200, 3800);	//LEFT - RIGHT
-	
-	while(1){
-		turn(10);	//turn by distance
-		if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-		
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-    }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	
-	
-	//FAST TURN LEFT
-	AdjustSpeeds(3800, 5200);	//LEFT - RIGHT
-	
-	while(1){
-		turn(10);	//turn by distance
-		if(GetLeftEncoderTotal() >= (selectedEncoderCount) || GetRightEncoderTotal() >= (selectedEncoderCount)){
-			break;
-		}
-		set_lcd_addr(0x00);
-		write_long_lcd(GetLeftEncoderTotal());
-		
-		set_lcd_addr(0x40);
-		write_long_lcd(GetRightEncoderTotal());
-    }
-	ResetEncoder();
-	selectedEncoderCount = 0;
-	
-	
-	
-	
-	
-	*/
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	//run the robot within the lines until both sensors go on the black line
-	RunMotorWithLightSensors();
-	
-	/*
-	
-	
- 	//LOOK AHEAD UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
-	while(1){
-		PingCheck();
-		set_lcd_addr(0x00);
-		write_long_lcd((long)Pingdist);
-		if(Pingdist <= 20){
-			break;
-		}
-	}
-	ResetEncoder(); 
-	
-	
-	
-	*/
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-// 	ResetUltraSoundSensor('F');
-	
-	/*
-	
-	//LOOK FOR EMPTY PARKING SPOTS UNTIL VALUE IS LESS THAN OR EQUAL TO 20 CM & THEN BREAK OUT OF LOOP & CONTINUE OPERATIONS
-	while(1){
-		ParkCheck();
-		set_lcd_addr(0x0);
-		write_long_lcd((long)Parkdist);
-		if(Parkdist <= 20){
-			break;
-		}
-	}
 	ResetEncoder();
 	
-	*/
+	//Start The Boulevard Part Of The Course
+	//run the motor & ping sensor until the sensor is within 15 cm of the obstacles
+	//MUST BE A STATE FOR 3 DIFFERENT CONDITIONS :
+	//1 : start in middle
+	//2 : start on left
+	//3 : start on right
 	
-	
-	//ResetUltraSoundSensor('U'); 
-	
-	
-	
-	
-	
-	
-	
+	//CREATE A CONDITIONAL THAT STARTS THE ROBOT ON THE PREFERRED SIDE OF THE STARTING LINE
+	RunBoulevard('R');
 	
 	
 	
@@ -651,266 +519,4 @@ void main() {
 	
 	
 	
-	asm("swi");
-	
-	
-    
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void GoStraight(NEW){        //encoder number each start at 1 ticks
-      encoderRotationCountL = 0;
-      encoderRotationCountR = 0;
-      
-      //ms_delay(10000);
-      
-      //set_servo54(5000);
-			//set_servo76(5000);
-
-      DDRT =  0xF3; //init PT2 & PT3 as input
-      ICPAR = 0xFC; //enable PT2 & PT3 as pulse accum
-      TCTL4 = 0x55; //set to capture rising edge                   ////potentially a problem 
-      countR=~countR + 1; //2's comp of count value
-      countL=~countL + 1; //2's comp of count value
-     
-      PACN3=countL; //load count into Pulse Acc reg
-      PACN2=countR; //load count into Pulse Acc reg
-
-            
-	for(x=0;x<NEW;x++){
-
-		   if(PACN3 > CompareCheck || PACN2 > CompareCheck){
-			    PACN3 = PACN3-80;
-			    PACN2 = PACN2-80;
-		   }
-		   
-			 set_lcd_addr(0x00);
-			 write_int_lcd(PACN3);
-			 set_lcd_addr(0x40);
-			 write_int_lcd(PACN2);
-			 
-			 
-			 if(PACN3 == 0){
-			    encoderRotationCountL++;
-			 }
-			 if(PACN2 == 0){
-			    encoderRotationCountR++;
-			 }
-			 
-			 if(encoderRotationCountL > encoderRotationCountR){    //speed up the right motor
-			    if(PACN3 > PACN2){     
-			       diff = 180*(encoderRotationCountL - encoderRotationCountR) + (PACN3 - 0) - (180 - PACN2);
-			    } else if(PACN3 < PACN2){
-			       diff = 180*(encoderRotationCountL - encoderRotationCountR) + (PACN3 - 0) + (180 - PACN2);
-			    } else{
-			       diff = 180*(encoderRotationCountL - encoderRotationCountR);
-			    }
-			    
-			    //diff = (PACN3 - PACN2);    
-			    
-			    
-				  newSpeedR = (diff*(motorR -4500)/90);    //increase speed
-				  newSpeedL = motorL; 
-
-				  set_servo54(newSpeedL);
-				  set_servo76(newSpeedR);
-          
-          
-          
-			 } else if(encoderRotationCountL < encoderRotationCountR){    //speed up the left motor
-		        if(PACN3 > PACN2){     
-			       diff = 180*(encoderRotationCountR - encoderRotationCountL) + (PACN3 - 0) - (180 - PACN2);
-			    } else if(PACN3 < PACN2){
-			       diff = 180*(encoderRotationCountR - encoderRotationCountL) + (PACN3 - 0) + (180 - PACN2);
-			    } else{
-			       diff = 180*(encoderRotationCountR - encoderRotationCountL);
-			    }
-		      
-		      
-		      //diff = (PACN3 - PACN2);    //left - right
-		      
-		      
-				  newSpeedL = (diff*(motorL -4500)/90);    //increase speed
-				  newSpeedR = motorR;
-
-				  set_servo54(newSpeedL);
-				  set_servo76(newSpeedR);
-          
-          
-          
-			 } else{   //the encoders have the same loop count so compare within the 180 degrees
-			    diff = (PACN3 - PACN2);    //left - right
-  		  
-  				 
-          if(diff < 0){
-            newSpeedL = (diff*(motorL -4500)/90);    //increase speed
-            newSpeedR = motorR;
-
-            set_servo54(newSpeedL);
-            set_servo76(newSpeedR);
-
-
-          }else if(diff > 0){
-            newSpeedR = (diff*(motorR -4500)/90);    //increase speed
-            newSpeedL = motorL; 
-
-            set_servo54(newSpeedL);
-            set_servo76(newSpeedR);
-
-
-          }else {
-
-            newSpeedL = motorL;
-            newSpeedR = motorR;
-
-            set_servo54(newSpeedL);
-            set_servo76(newSpeedR);
-
-
-          }
-			 }      
-	}     
-}
-
-
-
-int PingSensor (Ping) { 
-
-  
-  
-    
-    while(Ping){
-      
-      
-    TSCR1 = 0x90;         // enable TCNT count & Fast Flag Clearing
-    TSCR2 = 0x04;         // choose TCNT rate at 24MHz/16 = 1.5MHz                 //this will effect the parameters above
-    TIOS |= 0x02;         // enable OC1 function
-    TCTL2 = 0x0C;         // choose OC1 action to pull high
-    TFLG1 = 0xFF;         // clear all OC flags
-    TC1 = TCNT+10;        // wait 10 TCNT counts for pin pull high
-    while(TFLG1 & 0x02)   // wait for match to occur
-    TC1 = TC1 + 0;        // this will clear the OC1 Flag
-    TCTL2 = 0x04;         // set OC1 pin for toggle
-    TC1 += HiCnt;         // Make the high last as needed
-    HiorLo = 0;           // Clear the high-low flag to begin
-    TIE = 0x02;           // Authorize OC1 interrupts
-    asm("cli");
-         
-    HILO1_init(); 
-
-
-    HI_time1 = get_HI_time1();
-    
-    time = ( (double) HI_time1) * a;
-
-    dist = ( ( 331.5 + ( 0.6 * 21 ) ) * time ) * 17;
-    
-    
-    //ms_delay(Ping);
-    
-    if(dist !=0){
-      return dist;
-    
-    }
-    
-    }
-}
-
-
-
-
-
-
-
-
-
-void turnLeft(int degrees, char direction){			//example of calling the function : turnLeft(180, 'F');	//'B' is backwards
-	wheelDistance = (((((degrees*PI/180)*r)/(2*PI))*(180/PI))/180);	//distance the wheel should turn
-	
-	if(direction == 'F'){//go forwards
-		t = fullSpeedForwardTime;
-		newSpeedL = 5700;
-		newSpeedR = 5700;
-	} else{//go backwards
-		t = fullSpeedBackwardTime;
-		newSpeedL = 3300;
-		newSpeedR = 3300;
-	}
-	iterationCount = (int)(wheelDistance/t);	//this number represents the amount of iterations must occur for the wheel to turn the amount of degrees exactly specified
-	
-	for(i = 0; i < iterationCount; i++){
-		set_servo54(newSpeedL);
-		set_servo76(newSpeedR);
-	}
-  //set_servo54(5200);
-  //set_servo76(3950);
-  //ms_delay(NEW);
-}
-
-void turnRight(NEW){
-  set_servo54(3400);
-  set_servo76(5700);
-  ms_delay(NEW);
-}
-
-
-void stop (NEW){
-  set_servo54(4500);
-  set_servo76(4500);
-  ms_delay(NEW);
-}
-
-void END (NEW){
-while(NEW){
-  
-  set_servo54(4500);
-  set_servo76(4500);
-}
 }
