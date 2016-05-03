@@ -603,70 +603,56 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 	
 	if(startPos == 'L'){
 		//turn FAST right 90 degrees
-		TurnRight(30);
+		TurnRight(29);
 		
+		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
-		
-		
-		
-		
 		
 		//backup 7 cm
 		Backup(7);
 		
+		//turn FAST left 90 degrees
+		TurnLeft(29);
+		
+		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
+		//SensorSwitch();	//set a delay to prevent ping sensor race condition
+		MovingForwardRunAllFrontSensors();
+		
+		//backup 5 cm
+		Backup(5);
 		
 		//turn FAST left 90 degrees
 		TurnLeft(31);
 		
-		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
-		SensorSwitch();	//set a delay to prevent ping sensor race condition
-		MovingForwardRunAllFrontSensors();
-		
-		//backup 10 cm
-		Backup(10);
-		
-		//turn FAST left 90 degrees
-		TurnLeft(30);
-		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
 		
+		//backup 7 cm
+		Backup(7);
 		
-		//clear the encoders
-		ClearEncoders();
-		//reset the counter
-		selectedEncoderCount = 0;
-		
-		
-		//backup 5 cm
-		Backup(5);
 		//turn FAST right 90 degrees
-		TurnRight(25);
+		TurnRight(30);
+		
 		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
+		
 		//backup 5 cm
 		Backup(5);
-		//turn FAST left 90 degrees
-		TurnLeft(30);
 		
+		//turn FAST left 90 degrees
+		TurnLeft(28);
 	}else{//Right is assumed <---> 'R'
 		//turn FAST left 90 degrees
 		TurnLeft(29);
 		
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
-		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
 		
-		
-		
-		
-		
 		//backup 7 cm
 		Backup(7);
-		
 		
 		//turn FAST right 90 degrees
 		TurnRight(29);
@@ -674,8 +660,6 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
 		//SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
-		
-		//IT IS NOT BACKING UP FOR SOME REASON
 		
 		//backup 5 cm
 		Backup(5);
@@ -686,20 +670,21 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
 		
-		
 		//backup 7 cm
 		Backup(7);
+		
 		//turn FAST left 90 degrees
 		TurnLeft(30);
 		
 		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
+		
 		//backup 5 cm
 		Backup(5);
-		//turn FAST left 90 degrees
-		TurnLeft(30);
 		
+		//turn FAST left 90 degrees
+		TurnLeft(28);
 	}
 }
 
@@ -863,9 +848,8 @@ void main() {
 	//3 : start on right
 	
 	//CREATE A CONDITIONAL THAT STARTS THE ROBOT ON THE PREFERRED SIDE OF THE STARTING LINE
-	RunBoulevard('R');
-	//MovingForwardRunAllFrontSensors();//debug
-	
+	//RunBoulevard('R');
+	RunBoulevard('L');
 	
 	
 	
