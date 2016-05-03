@@ -419,87 +419,88 @@ int Backup(int dist){
 
 int ValueLeft;
 int ValueRight;
-int state = 0;
 int fsm;
 
 void RunMotorAndAlignSensors() {
 	ad0_enable();
-	InitialSpeed(4900);
-	state = 1;	//encoders are both going
+	InitialSpeed(4800);
 	fsm = 0;	//robot is reading left W and right W
 	while(1){
 		while(1){
 			ValueLeft = ad0conv(6);    // PAD06          //Robots left
 			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			set_lcd_addr(0x00);
+			write_int_lcd(ValueLeft);
+			set_lcd_addr(0x40);
+			write_int_lcd(ValueRight);
 			
 			if(ValueLeft>400 && ValueRight>400){
-				if(state == 1){//if true reset the encoder values
-					//clear the encoders
-					ClearEncoders();
-					//reset the counter
-					selectedEncoderCount = 0;
-				}
-				state = 0;
 				//stop
 				StopMoving();
+				fsm = 3;	//robot is reading left B and right B
 				break;
 			} else if(ValueLeft>400 && ValueRight<400){
-				if(state == 1){//if true reset the encoder values
-					//clear the encoders
-					ClearEncoders();
-					//reset the counter
-					selectedEncoderCount = 0;
-				}
-				state = 0;
 				//StopMoving();				//stop
 				//ms_delay(3000);				//ADDED DELAY
 				//move back 3 cm
-				MoveBackward(3500, 3500, 3);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
-				state = 0;	//0 b/c the method resets the encoder counts at the end
+				
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				
+				MoveBackward(3800, 3800, 8);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
 				//StopMoving();				//stop
 				ms_delay(2000);				//ADDED DELAY
 				fsm = 1;	//robot is reading left B and right W
 				break;
 			} else if(ValueLeft<400 && ValueRight>400){
-				if(state == 1){//if true reset the encoder values
-					//clear the encoders
-					ClearEncoders();
-					//reset the counter
-					selectedEncoderCount = 0;
-				}
-				state = 0;
 				//StopMoving();				//stop
 				//ms_delay(3000);				//ADDED DELAY
 				//move back 3 cm
-				MoveBackward(3500, 3500, 3);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
-				state = 0;	//0 b/c the method resets the encoder counts at the end
+				
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				
+				MoveBackward(3800, 3800, 8);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
 				//StopMoving();				//stop
 				ms_delay(2000);				//ADDED DELAY
 				fsm = 2;	//robot is reading left W and right B
 				break;
 			} else{//assumed 0 : 0
 				if(fsm == 0){
-					if(state == 1){//if true reset the encoder values
-						//clear the encoders
-						ClearEncoders();
-						//reset the counter
-						selectedEncoderCount = 0;
-					}
-					state = 1;	//encoders are both going
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
 					//go straight
-					AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
+					AdjustSpeeds(4800, 4800);	//LEFT - RIGHT
 					SpeedAdjust();	//adjust the speed
+					fsm = 0;	//robot is reading left W and right W
 					break;
 				} else if(fsm == 1){
 					//go right & MOVE FORWARD
-					AdjustSpeeds(4900, 4800);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					AdjustSpeeds(5050, 4800);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					fsm = 1;	//robot is reading left B and right W
 					break;
 				} else if(fsm == 2){
 					//go left & MOVE FORWARD
-					AdjustSpeeds(4800, 4900);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					AdjustSpeeds(4800, 5050);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					fsm = 2;	//robot is reading left W and right B
+					break;
+				} else if(fsm == 3){
+					//stop
+					StopMoving();
+					fsm = 3;	//robot is reading left W and right B
 					break;
 				}
-				fsm = 0;	//robot is reading left W and right W
+			}
+			if((ValueLeft>400 && ValueRight>400) || (fsm == 3)){
+				//stop
+				StopMoving();
+				break;
 			}
 		}
 	}
