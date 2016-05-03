@@ -456,6 +456,10 @@ void RunMotorAndAlignSensors() {
 					//reset the counter
 					selectedEncoderCount = 0;
 					MoveBackward(3800, 3800, 8);
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
 					//go right & MOVE FORWARD
 					AdjustSpeeds(4850, 4700);
 					forwardState = 0;//forward mode disabled
@@ -469,6 +473,10 @@ void RunMotorAndAlignSensors() {
 					//reset the counter
 					selectedEncoderCount = 0;
 					MoveBackward(3800, 3800, 8);
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
 					//go left & MOVE FORWARD
 					AdjustSpeeds(4800, 5200);
 					forwardState = 0;//forward mode disabled
@@ -530,6 +538,10 @@ void RunMotorAndAlignSensors() {
 					//reset the counter
 					selectedEncoderCount = 0;
 					MoveBackward(3800, 3800, 8);
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
 					//go right & MOVE FORWARD
 					AdjustSpeeds(4850, 4700);
 					forwardState = 0;//forward mode disabled
@@ -543,8 +555,12 @@ void RunMotorAndAlignSensors() {
 					//reset the counter
 					selectedEncoderCount = 0;
 					MoveBackward(3800, 3800, 8);
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
 					//go left & MOVE FORWARD
-					AdjustSpeeds(4800, 5200);
+					AdjustSpeeds(4700, 4850);
 					forwardState = 0;//forward mode disabled
 					//check the last state
 					
@@ -552,7 +568,6 @@ void RunMotorAndAlignSensors() {
 					
 				}
 			}
-		
 		}
 		if((ValueLeft>400 && ValueRight>400) || (fsm == 3)){
 			break;
@@ -638,7 +653,7 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		
 	}else{//Right is assumed <---> 'R'
 		//turn FAST left 90 degrees
-		TurnLeft(30);
+		TurnLeft(29);
 		
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		
@@ -652,16 +667,18 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		//backup 7 cm
 		Backup(7);
 		
-		/*
+		
 		//turn FAST right 90 degrees
-		TurnRight(30);
+		TurnRight(29);
 		
 		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
-		SensorSwitch();	//set a delay to prevent ping sensor race condition
+		//SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
 		
-		//backup 10 cm
-		Backup(10);
+		//IT IS NOT BACKING UP FOR SOME REASON
+		
+		//backup 5 cm
+		Backup(5);
 		
 		//turn FAST right 90 degrees
 		TurnRight(31);
@@ -670,10 +687,11 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		RunMotorAndAlignSensors();
 		
 		
-		//backup 5 cm
-		Backup(5);
+		//backup 7 cm
+		Backup(7);
 		//turn FAST left 90 degrees
-		TurnLeft(25);
+		TurnLeft(30);
+		
 		//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
@@ -681,7 +699,7 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		Backup(5);
 		//turn FAST left 90 degrees
 		TurnLeft(30);
-		*/
+		
 	}
 }
 
