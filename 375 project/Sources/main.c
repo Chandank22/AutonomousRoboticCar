@@ -420,11 +420,13 @@ int Backup(int dist){
 int ValueLeft;
 int ValueRight;
 int fsm;
+int forwardState;
 
 void RunMotorAndAlignSensors() {
 	ad0_enable();
 	InitialSpeed(4800);
 	fsm = 0;	//robot is reading left W and right W
+	forwardState = 1;
 	while(1){
 		while(1){
 			ValueLeft = ad0conv(6);    // PAD06          //Robots left
@@ -434,76 +436,130 @@ void RunMotorAndAlignSensors() {
 			set_lcd_addr(0x40);
 			write_int_lcd(ValueRight);
 			
-			if(ValueLeft>400 && ValueRight>400){
-				//stop
-				StopMoving();
-				fsm = 3;	//robot is reading left B and right B
-				break;
-			} else if(ValueLeft>400 && ValueRight<400){
-				//StopMoving();				//stop
-				//ms_delay(3000);				//ADDED DELAY
-				//move back 3 cm
-				
-				//clear the encoders
-				ClearEncoders();
-				//reset the counter
-				selectedEncoderCount = 0;
-				
-				MoveBackward(3800, 3800, 8);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
-				//StopMoving();				//stop
-				ms_delay(2000);				//ADDED DELAY
-				fsm = 1;	//robot is reading left B and right W
-				break;
-			} else if(ValueLeft<400 && ValueRight>400){
-				//StopMoving();				//stop
-				//ms_delay(3000);				//ADDED DELAY
-				//move back 3 cm
-				
-				//clear the encoders
-				ClearEncoders();
-				//reset the counter
-				selectedEncoderCount = 0;
-				
-				MoveBackward(3800, 3800, 8);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
-				//StopMoving();				//stop
-				ms_delay(2000);				//ADDED DELAY
-				fsm = 2;	//robot is reading left W and right B
-				break;
-			} else{//assumed 0 : 0
-				if(fsm == 0){
+			
+			
+			if(forwardState == 1){//is forward mode still enabled
+				if(ValueLeft>400 && ValueRight>400){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
 					selectedEncoderCount = 0;
-					//go straight
-					AdjustSpeeds(4800, 4800);	//LEFT - RIGHT
-					SpeedAdjust();	//adjust the speed
-					fsm = 0;	//robot is reading left W and right W
-					break;
-				} else if(fsm == 1){
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
+					//break out of everything
+					fsm = 3;	//robot is reading left B and right B
+					break;	//stop moving
+				}else if(ValueLeft>400 && ValueRight<400){
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
+					MoveBackward(3800, 3800, 8);
 					//go right & MOVE FORWARD
-					AdjustSpeeds(5050, 4800);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					AdjustSpeeds(4850, 4700);
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
 					fsm = 1;	//robot is reading left B and right W
-					break;
-				} else if(fsm == 2){
+					
+				}else if(ValueLeft<400 && ValueRight>400){
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
+					MoveBackward(3800, 3800, 8);
 					//go left & MOVE FORWARD
-					AdjustSpeeds(4800, 5050);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					AdjustSpeeds(4800, 5200);
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
 					fsm = 2;	//robot is reading left W and right B
-					break;
-				} else if(fsm == 3){
-					//stop
-					StopMoving();
-					fsm = 3;	//robot is reading left W and right B
-					break;
+					
+				}else{
+					if(fsm == 3){
+						//clear the encoders
+						ClearEncoders();
+						//reset the counter
+						selectedEncoderCount = 0;
+						//stop
+						StopMoving();
+						fsm = 3;	//robot is reading left B and right B
+						break;
+					} else if(fsm == 0){
+						//go straight
+						AdjustSpeeds(4800, 4800);	//LEFT - RIGHT
+						SpeedAdjust();	//adjust the speed
+						fsm = 0;	//robot is reading left W and right W
+						break;
+					} else if(fsm == 1){
+						//clear the encoders
+						ClearEncoders();
+						//reset the counter
+						selectedEncoderCount = 0;
+						//go right & MOVE FORWARD
+						AdjustSpeeds(4850, 4700);
+						fsm = 1;	//robot is reading left B and right W
+						break;
+					} else if(fsm == 2){
+						//clear the encoders
+						ClearEncoders();
+						//reset the counter
+						selectedEncoderCount = 0;
+						//go left & MOVE FORWARD
+						AdjustSpeeds(4800, 5200);
+						fsm = 2;	//robot is reading left W and right B
+						break;
+					}
+				}
+			}else{//is forward mode disabled
+				if(ValueLeft>400 && ValueRight>400){
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
+					//break out of everything
+					fsm = 3;	//robot is reading left B and right B
+					break;	//stop moving
+				}else if(ValueLeft>400 && ValueRight<400){
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
+					MoveBackward(3800, 3800, 8);
+					//go right & MOVE FORWARD
+					AdjustSpeeds(4850, 4700);
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
+					fsm = 1;	//robot is reading left B and right W
+					
+				}else if(ValueLeft<400 && ValueRight>400){
+					//clear the encoders
+					ClearEncoders();
+					//reset the counter
+					selectedEncoderCount = 0;
+					MoveBackward(3800, 3800, 8);
+					//go left & MOVE FORWARD
+					AdjustSpeeds(4800, 5200);
+					forwardState = 0;//forward mode disabled
+					//check the last state
+					
+					fsm = 2;	//robot is reading left W and right B
+					
 				}
 			}
-			if((ValueLeft>400 && ValueRight>400) || (fsm == 3)){
-				//stop
-				StopMoving();
-				break;
-			}
+		
+		}
+		if((ValueLeft>400 && ValueRight>400) || (fsm == 3)){
+			break;
 		}
 	}
+	//stop
+	StopMoving();
 	//clear the encoders
 	ClearEncoders();
 	//reset the counter
@@ -532,7 +588,7 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 	
 	if(startPos == 'L'){
 		//turn FAST right 90 degrees
-		TurnRight(28);
+		TurnRight(30);
 		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
@@ -541,8 +597,9 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		
 		
 		
-		//backup 3 cm
-		Backup(3);
+		//backup 7 cm
+		Backup(7);
+		
 		
 		//turn FAST left 90 degrees
 		TurnLeft(31);
@@ -561,6 +618,12 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		RunMotorAndAlignSensors();
 		
 		
+		//clear the encoders
+		ClearEncoders();
+		//reset the counter
+		selectedEncoderCount = 0;
+		
+		
 		//backup 5 cm
 		Backup(5);
 		//turn FAST right 90 degrees
@@ -575,17 +638,21 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		
 	}else{//Right is assumed <---> 'R'
 		//turn FAST left 90 degrees
-		TurnLeft(28);
+		TurnLeft(30);
+		
+		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
 		
 		
+		
+		
+		
+		//backup 7 cm
+		Backup(7);
+		
 		/*
-		
-		//backup 3 cm
-		Backup(3);
-		
 		//turn FAST right 90 degrees
 		TurnRight(30);
 		
