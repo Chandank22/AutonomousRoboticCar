@@ -361,10 +361,11 @@ void ParkCheck(){
 
 
 int MoveForward(int speed1, int speed2, int dis){
+	
 	AdjustSpeeds(speed1, speed2);
 
 	  while(1){
-			goStraight(dis);
+			turn(dis);	//turn by distance
 			if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
 				break;
 			}
@@ -374,7 +375,7 @@ int MoveForward(int speed1, int speed2, int dis){
 			set_lcd_addr(0x40);
 			write_long_lcd(GetRightEncoderTotal());
 	  }
-		ResetEncoder();
+		ClearEncoders();
 		selectedEncoderCount = 0;
 }
 
@@ -382,7 +383,7 @@ int MoveBackward(int speed1, int speed2, int dis){
 	AdjustSpeeds(speed1, speed2);
 
 	  while(1){
-			goStraight(dis);
+			turn(dis);	//turn by distance
 			if(GetLeftEncoderTotal() >= selectedEncoderCount || GetRightEncoderTotal() >= selectedEncoderCount){
 				break;
 			}
@@ -392,7 +393,7 @@ int MoveBackward(int speed1, int speed2, int dis){
 			set_lcd_addr(0x40);
 			write_long_lcd(GetRightEncoderTotal());
 	  }
-		ResetEncoder();
+		ClearEncoders();
 		selectedEncoderCount = 0;
 }
 
@@ -419,14 +420,14 @@ int Backup(int dist){
 int ValueLeft;
 int ValueRight;
 int state = 0;
+int fsm;
 
 void RunMotorAndAlignSensors() {
 	ad0_enable();
 	InitialSpeed(4900);
 	state = 1;	//encoders are both going
+	fsm = 0;	//robot is reading left W and right W
 	while(1){
-		ValueLeft = ad0conv(6);    // PAD06          //Robots left
-		ValueRight = ad0conv(2);   // PAD02          //Robots right
 		while(1){
 			ValueLeft = ad0conv(6);    // PAD06          //Robots left
 			ValueRight = ad0conv(2);   // PAD02          //Robots right
@@ -450,6 +451,14 @@ void RunMotorAndAlignSensors() {
 					selectedEncoderCount = 0;
 				}
 				state = 0;
+				//StopMoving();				//stop
+				//ms_delay(3000);				//ADDED DELAY
+				//move back 3 cm
+				MoveBackward(3500, 3500, 3);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+				state = 0;	//0 b/c the method resets the encoder counts at the end
+				//StopMoving();				//stop
+				ms_delay(2000);				//ADDED DELAY
+				fsm = 1;	//robot is reading left B and right W
 				break;
 			} else if(ValueLeft<400 && ValueRight>400){
 				if(state == 1){//if true reset the encoder values
@@ -459,37 +468,39 @@ void RunMotorAndAlignSensors() {
 					selectedEncoderCount = 0;
 				}
 				state = 0;
+				//StopMoving();				//stop
+				//ms_delay(3000);				//ADDED DELAY
+				//move back 3 cm
+				MoveBackward(3500, 3500, 3);/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+				state = 0;	//0 b/c the method resets the encoder counts at the end
+				//StopMoving();				//stop
+				ms_delay(2000);				//ADDED DELAY
+				fsm = 2;	//robot is reading left W and right B
 				break;
 			} else{//assumed 0 : 0
-				if(state == 1){//if true reset the encoder values
-					//clear the encoders
-					ClearEncoders();
-					//reset the counter
-					selectedEncoderCount = 0;
+				if(fsm == 0){
+					if(state == 1){//if true reset the encoder values
+						//clear the encoders
+						ClearEncoders();
+						//reset the counter
+						selectedEncoderCount = 0;
+					}
+					state = 1;	//encoders are both going
+					//go straight
+					AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
+					SpeedAdjust();	//adjust the speed
+					break;
+				} else if(fsm == 1){
+					//go right & MOVE FORWARD
+					AdjustSpeeds(4900, 4800);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					break;
+				} else if(fsm == 2){
+					//go left & MOVE FORWARD
+					AdjustSpeeds(4800, 4900);	//LEFT - RIGHT/////////////////////NEVER RUNNING---didn't backup & a delay is being added before jumping all the code underneath
+					break;
 				}
-				state = 1;	//encoders are both going
-				//go straight
-				AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
-				SpeedAdjust();	//adjust the speed
-				break;
+				fsm = 0;	//robot is reading left W and right W
 			}
-		}
-		if(ValueLeft>400 && ValueRight<400){
-			//move back 3 cm
-			MoveBackward(3500, 3500, 3);
-			state = 1;
-			//go right & MOVE FORWARD
-			AdjustSpeeds(4900, 4800);	//LEFT - RIGHT
-		} else if(ValueLeft<400 && ValueRight>400){
-			//move back 3 cm
-			MoveBackward(3500, 3500, 3);
-			state = 1;
-			//go left & MOVE FORWARD
-			AdjustSpeeds(4800, 4900);	//LEFT - RIGHT
-		} else if(ValueLeft>400 && ValueRight>400){
-			//stop
-			StopMoving();
-			break;
 		}
 	}
 	//clear the encoders
