@@ -439,7 +439,7 @@ void RunMotorAndAlignSensors() {
 			
 			
 			if(forwardState == 1){//is forward mode still enabled
-				if(ValueLeft>400 && ValueRight>400){
+				if(ValueLeft>200 && ValueRight>200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -450,7 +450,7 @@ void RunMotorAndAlignSensors() {
 					//break out of everything
 					fsm = 3;	//robot is reading left B and right B
 					break;	//stop moving
-				}else if(ValueLeft>400 && ValueRight<400){
+				}else if(ValueLeft>200 && ValueRight<200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -467,7 +467,7 @@ void RunMotorAndAlignSensors() {
 					
 					fsm = 1;	//robot is reading left B and right W
 					
-				}else if(ValueLeft<400 && ValueRight>400){
+				}else if(ValueLeft<200 && ValueRight>200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -478,7 +478,7 @@ void RunMotorAndAlignSensors() {
 					//reset the counter
 					selectedEncoderCount = 0;
 					//go left & MOVE FORWARD
-					AdjustSpeeds(4800, 5200);
+					AdjustSpeeds(4700, 4850);
 					forwardState = 0;//forward mode disabled
 					//check the last state
 					
@@ -515,13 +515,13 @@ void RunMotorAndAlignSensors() {
 						//reset the counter
 						selectedEncoderCount = 0;
 						//go left & MOVE FORWARD
-						AdjustSpeeds(4800, 5200);
+						AdjustSpeeds(4700, 4850);
 						fsm = 2;	//robot is reading left W and right B
 						break;
 					}
 				}
 			}else{//is forward mode disabled
-				if(ValueLeft>400 && ValueRight>400){
+				if(ValueLeft>200 && ValueRight>200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -532,7 +532,7 @@ void RunMotorAndAlignSensors() {
 					//break out of everything
 					fsm = 3;	//robot is reading left B and right B
 					break;	//stop moving
-				}else if(ValueLeft>400 && ValueRight<400){
+				}else if(ValueLeft>200 && ValueRight<200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -549,7 +549,7 @@ void RunMotorAndAlignSensors() {
 					
 					fsm = 1;	//robot is reading left B and right W
 					
-				}else if(ValueLeft<400 && ValueRight>400){
+				}else if(ValueLeft<200 && ValueRight>200){
 					//clear the encoders
 					ClearEncoders();
 					//reset the counter
@@ -569,7 +569,7 @@ void RunMotorAndAlignSensors() {
 				}
 			}
 		}
-		if((ValueLeft>400 && ValueRight>400) || (fsm == 3)){
+		if((ValueLeft>200 && ValueRight>200) || (fsm == 3)){
 			break;
 		}
 	}
@@ -623,7 +623,7 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		Backup(5);
 		
 		//turn FAST left 90 degrees
-		TurnLeft(31);
+		TurnLeft(28);
 		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
@@ -638,11 +638,17 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
 		
-		//backup 5 cm
-		Backup(5);
+		//backup 7 cm
+		Backup(7);
+		
+		//drive to the line and align the robot with the line
+		RunMotorAndAlignSensors();
+		
+		//backup 7 cm
+		Backup(7);
 		
 		//turn FAST left 90 degrees
-		TurnLeft(28);
+		TurnLeft(29);
 	}else{//Right is assumed <---> 'R'
 		//turn FAST left 90 degrees
 		TurnLeft(29);
@@ -665,7 +671,7 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		Backup(5);
 		
 		//turn FAST right 90 degrees
-		TurnRight(31);
+		TurnRight(28);
 		
 		//drive to the line and align the robot with the line
 		RunMotorAndAlignSensors();
@@ -680,49 +686,204 @@ void RunBoulevard(char startPos){//Enter a start position EX : 'L'  'R'
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		MovingForwardRunAllFrontSensors();
 		
-		//backup 5 cm
-		Backup(5);
+		//backup 7 cm
+		Backup(7);
+		
+		//drive to the line and align the robot with the line
+		RunMotorAndAlignSensors();
+		
+		//backup 7 cm
+		Backup(7);
 		
 		//turn FAST left 90 degrees
-		TurnLeft(28);
+		TurnLeft(29);
 	}
+}
+
+void RunPath1(){
+	//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
+	//SensorSwitch();	//set a delay to prevent ping sensor race condition
+	MovingForwardRunAllFrontSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//drive to the line and align the robot with the line
+	RunMotorAndAlignSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//turn FAST left 90 degrees
+	TurnLeft(29);
+}
+
+void RunPath2(){
+	//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
+	//SensorSwitch();	//set a delay to prevent ping sensor race condition
+	MovingForwardRunAllFrontSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//drive to the line and align the robot with the line
+	RunMotorAndAlignSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//turn FAST left 90 degrees
+	TurnLeft(29);
+}
+
+void RunPath3(){
+	//drive to the line & check both line sensors to be on the black line OR CHECK FOR ANOTHER OBSTACLE
+	//SensorSwitch();	//set a delay to prevent ping sensor race condition
+	MovingForwardRunAllFrontSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//drive to the line and align the robot with the line
+	RunMotorAndAlignSensors();
+	
+	//backup 7 cm
+	Backup(7);
+	
+	//turn FAST left 90 degrees
+	TurnRight(29);
+}
+
+int p1;
+int p2;
+int p3;
+int p4;
+
+int s1;
+int s2;
+int s3;
+int s4;
+
+int count;
+void RunParkingLot(){
+	SensorSwitch();	//set a delay to prevent ping sensor race condition
+	p1 = 0;
+	p2 = 0;
+	p3 = 0;
+	p4 = 0;
+	
+	s1 = 0;
+	s2 = 0;
+	s3 = 0;
+	s4 = 0;
+	
+	
+	while(1){
+		if(s1 == 1 || s1 == 1 || s1 == 1 || s1 == 1){//all 4 checked
+			
+		}
+		
+		if(p1 == 0 || p1 == 0 || p1 == 0 || p1 == 0){
+			
+		}
+		else{//park
+			
+		}
+	}
+	
+	
+	
+	//4 checks 18" every step or 45 cm
+	MoveForward(4800, 4800, 45);
+	//check the parking ping sensor
+	while(s1 == 0){
+		ParkCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)parkdist);
+		if(parkdist <= 35){//less than 35 cm to object
+			p1 = 1;//object present DON'T PARK
+			s1 = 1;
+			break;
+		}else{//object not present PARK
+			//------------------------------------------------------park method here
+			s1 = 1;
+			break;
+		}
+	}//go to the next object
+	MoveForward(4800, 4800, 45);////////////////////////////////////////////////this may not run if a spot if found
+	//check the parking ping sensor
+	while(s2 == 0){
+		ParkCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)parkdist);
+		if(parkdist <= 35){//less than 35 cm to object
+			p2 = 1;//object present DON'T PARK
+			s2 = 1;
+			break;
+		}else{//object not present PARK
+			//------------------------------------------------------park method here
+			s2 = 1;
+			break;
+		}
+	}//go to the next object
+	MoveForward(4800, 4800, 45);////////////////////////////////////////////////this may not run if a spot if found
+	//check the parking ping sensor
+	while(s3 == 0){
+		ParkCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)parkdist);
+		if(parkdist <= 35){//less than 35 cm to object
+			p3 = 1;//object present DON'T PARK
+			s3 = 1;
+			break;
+		}else{//object not present PARK
+			//------------------------------------------------------park method here
+			s3 = 1;
+			break;
+		}
+	}//go to the next object
+	MoveForward(4800, 4800, 45);////////////////////////////////////////////////this may not run if a spot if found
+	//check the parking ping sensor
+	while(s4 == 0){
+		ParkCheck();
+		set_lcd_addr(0x00);
+		write_long_lcd((long)parkdist);
+		if(parkdist <= 35){//less than 35 cm to object
+			p4 = 1;//object present DON'T PARK
+			s4 = 1;
+			break;
+		}else{//object not present PARK
+			//------------------------------------------------------park method here
+			s4 = 1;
+			break;
+		}
+	}//go to the next object
+
+	//clear the encoders
+	ClearEncoders();
+	//reset the counter
+	selectedEncoderCount = 0;
 }
 
 
 
 
 
-
-
-
-
-
-
-
-
-int MovingForwardRunAllFrontSensors(){
-	InitialSpeed(4900);
+int RunLightSensors(){
+	InitialSpeed(4800);
 	ad0_enable();
 	while(1){
 		while(1){
-			PingCheck();
-			set_lcd_addr(0x00);
-			write_long_lcd((long)pingdist);
-			if(pingdist <= 20){
-				StopMoving();
-				break;
-			}
-			
 			ValueLeft = ad0conv(6);    // PAD06          //Robots left
 			ValueRight = ad0conv(2);   // PAD02          //Robots right
 			
 			SpeedAdjust();	//adjust the speed
 			
-			if(ValueLeft>400 && ValueRight>400){
+			if(ValueLeft>200 && ValueRight>200){
 				//stop
 				StopMoving();
 				break;
-			} else if(ValueLeft>400 && ValueRight<400){
+			} else if(ValueLeft>200 && ValueRight<200){
 				//clear the encoders
 				ClearEncoders();
 				//reset the counter
@@ -730,7 +891,7 @@ int MovingForwardRunAllFrontSensors(){
 				//stop
 				StopMoving();
 				break;
-			} else if(ValueLeft<400 && ValueRight>400){
+			} else if(ValueLeft<200 && ValueRight>200){
 				//clear the encoders
 				ClearEncoders();
 				//reset the counter
@@ -747,15 +908,92 @@ int MovingForwardRunAllFrontSensors(){
 			
 			
 		}
-		if(ValueLeft>400 && ValueRight<400){
+		if(ValueLeft>200 && ValueRight<200){
 			//go left
 			AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
 		}
-		if(ValueLeft<400 && ValueRight>400){
+		if(ValueLeft<200 && ValueRight>200){
 			//go right
 			AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
 		}
-		if(ValueLeft>400 && ValueRight>400){
+		if(ValueLeft>200 && ValueRight>200){
+			//stop
+			StopMoving();
+			break;
+		}
+	}
+	//clear the encoders
+	ClearEncoders();
+	//reset the counter
+	selectedEncoderCount = 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+int MovingForwardRunAllFrontSensors(){
+	InitialSpeed(4800);
+	ad0_enable();
+	while(1){
+		while(1){
+			PingCheck();
+			set_lcd_addr(0x00);
+			write_long_lcd((long)pingdist);
+			if(pingdist <= 20){
+				StopMoving();
+				break;
+			}
+			
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			
+			SpeedAdjust();	//adjust the speed
+			
+			if(ValueLeft>200 && ValueRight>200){
+				//stop
+				StopMoving();
+				break;
+			} else if(ValueLeft>200 && ValueRight<200){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				break;
+			} else if(ValueLeft<200 && ValueRight>200){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				break;
+			} else{//assumed 0 : 0
+				//go straight
+				AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
+				SpeedAdjust();	//adjust the speed
+				break;
+			}
+			
+			
+		}
+		if(ValueLeft>200 && ValueRight<200){
+			//go left
+			AdjustSpeeds(4500, 5200);	//LEFT - RIGHT
+		}
+		if(ValueLeft<200 && ValueRight>200){
+			//go right
+			AdjustSpeeds(5200, 4500);	//LEFT - RIGHT
+		}
+		if(ValueLeft>200 && ValueRight>200){
 			//stop
 			StopMoving();
 			break;
@@ -848,10 +1086,13 @@ void main() {
 	//3 : start on right
 	
 	//CREATE A CONDITIONAL THAT STARTS THE ROBOT ON THE PREFERRED SIDE OF THE STARTING LINE
-	//RunBoulevard('R');
-	RunBoulevard('L');
+	RunBoulevard('R');
+	//RunBoulevard('L');
 	
 	
+	//RunPath1();//run 1st time for path 1
+	//RunPath2();//run 2nd time for path 2
+	//RunPath3();//run 3rd time for path 3
 	
 	
 	
