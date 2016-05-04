@@ -460,6 +460,8 @@ void RunMotorAndAlignSensors() {
 					ClearEncoders();
 					//reset the counter
 					selectedEncoderCount = 0;
+					//add delay to prevent reading old adc values
+					ms_delay(100);
 					//go right & MOVE FORWARD
 					AdjustSpeeds(4850, 4700);
 					forwardState = 0;//forward mode disabled
@@ -477,6 +479,8 @@ void RunMotorAndAlignSensors() {
 					ClearEncoders();
 					//reset the counter
 					selectedEncoderCount = 0;
+					//add delay to prevent reading old adc values
+					ms_delay(100);
 					//go left & MOVE FORWARD
 					AdjustSpeeds(4700, 4850);
 					forwardState = 0;//forward mode disabled
@@ -505,6 +509,8 @@ void RunMotorAndAlignSensors() {
 						ClearEncoders();
 						//reset the counter
 						selectedEncoderCount = 0;
+						//add delay to prevent reading old adc values
+						ms_delay(100);
 						//go right & MOVE FORWARD
 						AdjustSpeeds(4850, 4700);
 						fsm = 1;	//robot is reading left B and right W
@@ -514,6 +520,8 @@ void RunMotorAndAlignSensors() {
 						ClearEncoders();
 						//reset the counter
 						selectedEncoderCount = 0;
+						//add delay to prevent reading old adc values
+						ms_delay(100);
 						//go left & MOVE FORWARD
 						AdjustSpeeds(4700, 4850);
 						fsm = 2;	//robot is reading left W and right B
@@ -542,6 +550,8 @@ void RunMotorAndAlignSensors() {
 					ClearEncoders();
 					//reset the counter
 					selectedEncoderCount = 0;
+					//add delay to prevent reading old adc values
+					ms_delay(100);
 					//go right & MOVE FORWARD
 					AdjustSpeeds(4850, 4700);
 					forwardState = 0;//forward mode disabled
@@ -559,6 +569,8 @@ void RunMotorAndAlignSensors() {
 					ClearEncoders();
 					//reset the counter
 					selectedEncoderCount = 0;
+					//add delay to prevent reading old adc values
+					ms_delay(100);
 					//go left & MOVE FORWARD
 					AdjustSpeeds(4700, 4850);
 					forwardState = 0;//forward mode disabled
@@ -1086,14 +1098,14 @@ void main() {
 	//3 : start on right
 	
 	//CREATE A CONDITIONAL THAT STARTS THE ROBOT ON THE PREFERRED SIDE OF THE STARTING LINE
-	RunBoulevard('R');
+	//RunBoulevard('R');
 	//RunBoulevard('L');
 	
 	
 	//RunPath1();//run 1st time for path 1
 	//RunPath2();//run 2nd time for path 2
 	//RunPath3();//run 3rd time for path 3
-	
+	RunMotorAndAlignSensors();//THE SENSORS MUST BE VERY VERY CLOSE TO THE FLOOR OR THIS WON'T WORK
 	
 	
 }
