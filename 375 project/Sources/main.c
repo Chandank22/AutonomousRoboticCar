@@ -754,8 +754,8 @@ void RunPath2(){
 	//adjust the robots orientation
 	Adjust(3800, 4500, 2);//--------------------------right - left
 	
-	//backup 7 cm
-	Backup(7);
+	//backup 5 cm
+	Backup(5);
 	
 	//adjust the robots orientation
 	Adjust(4500, 3800, 1);//--------------------------right - left
@@ -763,86 +763,59 @@ void RunPath2(){
 	//drive to the line and align the robot with the line
 	RunMotorAndAlignSensors();
 	
-	//backup 7 cm
-	Backup(7);
+	//backup 15 cm
+	Backup(15);
 	
 	//adjust the robots orientation
-	Adjust(5000, 4500, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4500, 4000, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4900, 2);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(5000, 4500, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4500, 4000, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4900, 2);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4500, 3);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4500, 4000, 1);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4500, 2);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4800, 4500, 1);//--------------------------right - left
-	
+	Adjust(5250, 4500, 25);//--------------------------right - left
 	ms_delay(100);
-	
+	//adjust the robots orientation
+	Adjust(4500, 3800, 20);//--------------------------right - left
+	ms_delay(100);
 }
 
 void RunPath3(){
+	//drive to the line
+	RunLightSensors();
+	ms_delay(100);
+	
+	
+	//adjust the robots orientation
+	Adjust(4500, 3800, 2);//--------------------------right - left
+	
+	//backup 5 cm
+	Backup(5);
+	
+	//adjust the robots orientation
+	Adjust(3800, 4500, 1);//--------------------------right - left
+	
 	
 	//drive to the line and align the robot with the line
 	RunMotorAndAlignSensors();
-	
-	//backup 8 cm
-	Backup(8);
-	
+	ms_delay(100);
 	//adjust the robots orientation
-	Adjust(4500, 5000, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4000, 4500, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4900, 2);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4500, 5000, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4000, 4500, 10);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4900, 4900, 2);//--------------------------right - left
-	
-	//adjust the robots orientation
-	Adjust(4500, 4900, 4);//--------------------------right - left
-	
-	
+	//Adjust(3800, 3800, 3);//--------------------------right - left
+	//ms_delay(100);
 	
 	
 	
 	//adjust the robots orientation
-	Adjust(4500, 4900, 3);//--------------------------right - left
-	
+	Adjust(3800, 4500, 22);//--------------------------right - left
+	ms_delay(100);
 	//adjust the robots orientation
-	Adjust(4500, 4800, 2);//--------------------------right - left
+	Adjust(4500, 5250, 22);//--------------------------right - left
+	ms_delay(100);
 	
 	
 	
-	//adjust the robots orientation
-	//Adjust(4500, 4000, 2);//--------------------------right - left*/
+	//RunLightSensorsAdjustRobot();
+	
+	
+	
+	
+	
+	
+
 	
 	ms_delay(100);
 }
@@ -854,57 +827,143 @@ int parkingSpot2;
 int parkingSpot3;
 int parkingSpot4;
 
+int whiteSpaceStateCount;
+int rightTurns;
+int leftTurns;
+
 void RunParkingLot(){
 	parkingSpot1 = 0;
 	parkingSpot2 = 0;
 	parkingSpot3 = 0;
 	parkingSpot4 = 0;
 	
+	ad0_enable();
+	
 	while(1){
+		whiteSpaceStateCount = 0;
+		rightTurns = 0;
+		leftTurns = 0;
 		ms_delay(1000);
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		//go forward 57 cm
-		MoveForward(4800, 4800, 45);
+		MoveForward(4800, 4800, 52);
 		//adjust the robots orientation
-		Adjust(4900, 4500, 2);//--------------------------right - left
+		//Adjust(4900, 4500, 2);//--------------------------right - left
 		//check 1st parking spot
 		for(counterCheck = 0; counterCheck < 75; counterCheck++){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			/*
+			if(ValueLeft<250 && ValueRight<250){
+				whiteSpaceStateCount++;
+			}
+			if(whiteSpaceStateCount == 1){
+				//go right
+				Adjust(5250, 4500, 1);	//LEFT - RIGHT
+			}
+			*/
+			if(ValueLeft>250 && ValueRight<250){
+				//go right
+				Adjust(4500, 5000, 1);
+				rightTurns++;
+			}
+			if(ValueLeft<250 && ValueRight>250){
+				//go left
+				Adjust(5000, 4500, 1);
+			}
+			
 			ParkCheck();
 			set_lcd_addr(0x00);
 			write_long_lcd((long)parkdist);
 			
-			if(parkdist <= 35){
+			if(parkdist <= 35 && counterCheck == 74){
 				//object present
 				parkingSpot1 = 1;
+				break;
 			}
 			
 		}
+		
+		if(rightTurns%2 == 1 && rightTurns > 0){
+			leftTurns = rightTurns/2 + 1;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		} else if(rightTurns%2 == 0 && rightTurns > 0){
+			leftTurns = rightTurns/2;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		}
+		
+		
+		
 		if(parkingSpot1 == 0){//park because no object is present
 			ParallelPark();
 			break;
 		}
+		whiteSpaceStateCount = 0;
+		rightTurns = 0;
+		leftTurns = 0;
 		ms_delay(1000);
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		//go forward 45 cm
 		MoveForward(4800, 4800, 45);
 		//adjust the robots orientation
-		//Adjust(4800, 4500, 2);//--------------------------right - left
+		
 		//check 1st parking spot
 		for(counterCheck = 0; counterCheck < 75; counterCheck++){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			/*
+			if(ValueLeft<250 && ValueRight<250){
+				whiteSpaceStateCount++;
+			}
+			if(whiteSpaceStateCount == 1){
+				//go right
+				Adjust(5250, 4500, 1);	//LEFT - RIGHT
+			}
+			*/
+			if(ValueLeft>250 && ValueRight<250){
+				//go right
+				Adjust(4500, 5000, 1);
+				rightTurns++;
+			}
+			if(ValueLeft<250 && ValueRight>250){
+				//go left
+				Adjust(5000, 4500, 1);
+			}
+			
 			ParkCheck();
 			set_lcd_addr(0x00);
 			write_long_lcd((long)parkdist);
 			
-			if(parkdist <= 35){
+			if(parkdist <= 35 && counterCheck == 74){
 				//object present
 				parkingSpot2 = 1;
+				break;
 			}
 			
 		}
+		
+		if(rightTurns%2 == 1 && rightTurns > 0){
+			leftTurns = rightTurns/2 + 1;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		} else if(rightTurns%2 == 0 && rightTurns > 0){
+			leftTurns = rightTurns/2;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		}
+		
 		if(parkingSpot2 == 0){//park because no object is present
 			ParallelPark();
 			break;
 		}
+		//go left
+		Adjust(5200, 4500, 1);
+		
+		whiteSpaceStateCount = 0;
+		rightTurns = 0;
+		leftTurns = 0;
 		ms_delay(1000);
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		//go forward 45 cm
@@ -912,40 +971,109 @@ void RunParkingLot(){
 		//Adjust(4800, 4500, 2);//--------------------------right - left
 		//check 1st parking spot
 		for(counterCheck = 0; counterCheck < 75; counterCheck++){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			/*
+			if(ValueLeft<250 && ValueRight<250){
+				whiteSpaceStateCount++;
+			}
+			if(whiteSpaceStateCount == 1){
+				//go right
+				Adjust(5250, 4500, 1);	//LEFT - RIGHT
+			}
+			*/
+			if(ValueLeft>250 && ValueRight<250){
+				//go right
+				Adjust(4500, 5000, 1);
+				rightTurns++;
+			}
+			if(ValueLeft<250 && ValueRight>250){
+				//go left
+				Adjust(5000, 4500, 1);
+			}
+			
 			ParkCheck();
 			set_lcd_addr(0x00);
 			write_long_lcd((long)parkdist);
 			
-			if(parkdist <= 35){
+			if(parkdist <= 35 && counterCheck == 74){
 				//object present
 				parkingSpot3 = 1;
+				break;
 			}
 			
 		}
+		
+		if(rightTurns%2 == 1 && rightTurns > 0){
+			leftTurns = rightTurns/2 + 1;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		} else if(rightTurns%2 == 0 && rightTurns > 0){
+			leftTurns = rightTurns/2;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		}
+		
 		if(parkingSpot3 == 0){//park because no object is present
 			ParallelPark();
 			break;
 		}
+		whiteSpaceStateCount = 0;
+		rightTurns = 0;
+		leftTurns = 0;
 		ms_delay(1000);
 		SensorSwitch();	//set a delay to prevent ping sensor race condition
 		//go forward 45 cm
 		MoveForward(4800, 4800, 45);
 		//adjust the robots orientation
-		//Adjust(4800, 4500, 2);//--------------------------right - left
+		//Adjust(5200, 4500, 2);//--------------------------right - left
 		//check 1st parking spot
 		for(counterCheck = 0; counterCheck < 75; counterCheck++){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			/*
+			if(ValueLeft<250 && ValueRight<250){
+				whiteSpaceStateCount++;
+			}
+			if(whiteSpaceStateCount == 1){
+				//go right
+				Adjust(5250, 4500, 1);	//LEFT - RIGHT
+			}
+			*/
+			if(ValueLeft>250 && ValueRight<250){
+				//go right
+				Adjust(4500, 5000, 1);
+				rightTurns++;
+			}
+			if(ValueLeft<250 && ValueRight>250){
+				//go left
+				Adjust(5000, 4500, 1);
+			}
+			
 			ParkCheck();
 			set_lcd_addr(0x00);
 			write_long_lcd((long)parkdist);
 			
-			if(parkdist <= 35){
+			if(parkdist <= 35 && counterCheck == 74){
 				//object present
 				parkingSpot4 = 1;
+				break;
 			}
-			break;
 		}
+		
+		if(rightTurns%2 == 1 && rightTurns > 0){
+			leftTurns = rightTurns/2 + 1;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		} else if(rightTurns%2 == 0 && rightTurns > 0){
+			leftTurns = rightTurns/2;
+			//go left
+			Adjust(5200, 4500, leftTurns);
+		}
+		
 		if(parkingSpot4 == 0){//park because no object is present
 			ParallelPark();
+			break;
 		}
 		break;
 	}
@@ -957,8 +1085,8 @@ void RunParkingLot(){
 }
 
 int ParallelPark(){
-	//go forward 45 cm
-	MoveForward(4800, 4800, 23);
+	//go forward 28 cm
+	MoveForward(4800, 4800, 28);
 	//clear the encoders
 	ClearEncoders();
 	//reset the counter
@@ -975,8 +1103,168 @@ int ParallelPark(){
 	//reset the counter
 	selectedEncoderCount = 0;
 	//turn the robot in the parking spot to finish
-	TurnRight(25);
+	TurnRight(26);
 }
+
+
+int toggle;
+int disable;
+
+int RunLightSensorsAdjustRobot(){
+	disable = 0;
+	toggle = 0;
+	InitialSpeed(4800);
+	ad0_enable();
+	while(1){
+		while(1){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			
+			SpeedAdjust();	//adjust the speed
+			
+			if(toggle == 1 && ValueLeft<250 && ValueRight<250){
+				//go straight
+				StopMoving();
+				disable = 1;
+				break;
+			} else if(ValueLeft>250 && ValueRight<250){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				toggle = 1;
+				break;
+			} else if(ValueLeft<250 && ValueRight>250){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				toggle = 1;
+				break;
+			} else if(ValueLeft>250 && ValueRight>250){
+				//stop
+				StopMoving();
+				toggle = 1;
+				break;
+			} else if(toggle == 0 && ValueLeft<250 && ValueRight<250){
+				//go straight
+				AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
+				SpeedAdjust();	//adjust the speed
+				break;
+			}
+			
+			
+		}
+		if(disable == 1){
+			//stop
+			StopMoving();
+			break;
+		}
+		if(ValueLeft>250 && ValueRight<250){
+			//go left
+			AdjustSpeeds(4500, 5250);	//LEFT - RIGHT
+			
+		}
+		if(ValueLeft<250 && ValueRight>250){
+			//go right
+			
+			AdjustSpeeds(5250, 4500);	//LEFT - RIGHT
+		}
+		if(ValueLeft>250 && ValueRight>250){
+			//stop
+			StopMoving();
+			break;
+		}
+	}
+	//clear the encoders
+	ClearEncoders();
+	//reset the counter
+	selectedEncoderCount = 0;
+}
+
+
+
+
+
+
+
+
+
+/*
+int RunLightSensorsPerDisatnce(int dis){
+	InitialSpeed(4800);
+	ad0_enable();
+	while(1){
+		while(1){
+			ValueLeft = ad0conv(6);    // PAD06          //Robots left
+			ValueRight = ad0conv(2);   // PAD02          //Robots right
+			
+			SpeedAdjust();	//adjust the speed
+			
+			if(ValueLeft>250 && ValueRight>250){
+				//stop
+				StopMoving();
+				break;
+			} else if(ValueLeft>250 && ValueRight<250){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				break;
+			} else if(ValueLeft<250 && ValueRight>250){
+				//clear the encoders
+				ClearEncoders();
+				//reset the counter
+				selectedEncoderCount = 0;
+				//stop
+				StopMoving();
+				break;
+			} else{//assumed 0 : 0
+				//go straight
+				AdjustSpeeds(4900, 4900);	//LEFT - RIGHT
+				SpeedAdjust();	//adjust the speed
+				break;
+			}
+			
+			
+		}
+		if(ValueLeft>250 && ValueRight<250){
+			//go left
+			AdjustSpeeds(4500, 5250);	//LEFT - RIGHT
+		}
+		if(ValueLeft<250 && ValueRight>250){
+			//go right
+			AdjustSpeeds(5250, 4500);	//LEFT - RIGHT
+		}
+		if(ValueLeft>250 && ValueRight>250){
+			//stop
+			StopMoving();
+			break;
+		}
+	}
+	//clear the encoders
+	ClearEncoders();
+	//reset the counter
+	selectedEncoderCount = 0;
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1122,7 +1410,7 @@ int MovingForwardRunAllFrontSensors(){
 }
 
 int MovingForwardObstacleCheck(int a){
-	InitialSpeed(5000);
+	InitialSpeed(4800);
 	while(1){
 		SpeedAdjust();	//adjust the speed
 		PingCheck();
@@ -1222,17 +1510,22 @@ void main() {
 		
 		//CREATE A CONDITIONAL THAT STARTS THE ROBOT ON THE PREFERRED SIDE OF THE STARTING LINE
 		//RunBoulevard('R');
+		
+		
+		
+		
+		
 		RunBoulevard('L');
-		ms_delay(2500);
+		ms_delay(200);
 		
 		RunPath1();//run 1st time for path 1
-		ms_delay(2500);
+		ms_delay(200);
 		
 		RunPath2();//run 2nd time for path 2
-		ms_delay(100);
+		ms_delay(200);
 		
 		RunPath3();//run 3rd time for path 3
-		
+		ms_delay(200);
 		
 		RunParkingLot();
 	}
