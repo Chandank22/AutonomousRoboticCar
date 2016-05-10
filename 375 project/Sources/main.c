@@ -810,7 +810,7 @@ void RunParkingLot(){
 			
 		}
 		
-		if(rightTurns%2 == 1 && rightTurns > 0)   //add an offset to the robot so it goes straight again along the black line{
+		if(rightTurns%2 == 1 && rightTurns > 0){    //add an offset to the robot so it goes straight again along the black line
 			leftTurns = rightTurns/2 + 1;
 			//go left
 			Adjust(5200, 4500, leftTurns);
